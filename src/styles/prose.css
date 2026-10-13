@@ -1,0 +1,6 @@
+/* Basic, responsive styles for prose content used in About page */
+.prose {
+  @apply text-sm leading-7;
+}
+.prose h3 {@apply text-lg font-medium mt-6 mb-2}
+.prose p {@apply my-2}
