@@ -31,6 +31,6 @@ from the Actions tab.
 ## Routines
 
 A weekly DMARC readout for hawthorneducation.com runs as a claude.ai Routine
-and emails jon@hawthorneducation.com every Monday. What it does, and the
-instructions it follows, live in [`docs/routines.md`](docs/routines.md). Its
+every Monday and emails jon@hawthorneducation.com only when something needs a
+look. What it does, and the instructions it follows, live in [`docs/routines.md`](docs/routines.md). Its
 parser is `scripts/dmarc-weekly.py`.

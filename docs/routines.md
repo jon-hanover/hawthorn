@@ -18,7 +18,7 @@ change that prompt, update the copy under *Trigger prompt* below too.
 | Routine | `Hawthorn weekly DMARC readout`, trigger `trig_019c7zs8pxiMsypCuxkux8CZ` |
 | Session | `session_016WPbTiJGj44USsuiJEhFWV` (persistent, Sonnet 5.5, Jon's choice 14 Oct 2026) |
 | Schedule | Mondays 6:52 AM Denver (`CRON_TZ=America/Denver 52 6 * * 1`) |
-| Sends to | jon@hawthorneducation.com, every week, quiet or not |
+| Emails | jon@hawthorneducation.com, only when something needs a look (Jon, 14 Oct 2026). Quiet weeks send nothing. |
 | Parser | [`scripts/dmarc-weekly.py`](../scripts/dmarc-weekly.py) |
 
 Modelled on the DMARC check inside onWisdom's weekly hygiene pass
@@ -45,6 +45,17 @@ inbox also receives onWisdom's reports (`Report domain: onwisdom.org`).
 onWisdom's own routine handles those, so this one ignores them; the parser
 skips any report for another domain anyway.
 
+Jon wants no DMARC mail in his inbox unless something is wrong, so a Gmail
+filter (set up by hand, since the Gmail connector cannot create filters)
+sends Google's reports straight to the **Hawthorn DMARC** label, skipping the
+inbox and marked read, the same way **onWisdom DMARC** already works:
+
+- From: `noreply-dmarc-support@google.com`
+- Subject: `Report domain: hawthorneducation.com`
+- Actions: Skip the Inbox, Mark as read, Apply the label "Hawthorn DMARC"
+
+The routine searches `in:anywhere`, so it still finds archived reports.
+
 The policy is `p=none`, so receivers deliver everything regardless. A flag
 in this report means "take a look". It never means mail was blocked.
 
@@ -60,16 +71,16 @@ Never flagged:
 - **Low-volume forwarding and reply-relay mismatches** from known platforms:
   a few messages where the header From is hawthorneducation.com but SPF or
   DKIM belongs to a mailing list, a forwarder, or a calendar or newsletter
-  service relaying a reply. These are normal side effects of mail being
-  forwarded, not someone spoofing the domain.
+  service relaying a reply. These are normal side effects of forwarded
+  mail.
 
 Jon confirmed on 14 Oct 2026 that nothing else sends as hawthorneducation.com.
 When a new service starts sending (a newsletter tool, a CRM, a scheduling
 tool), add it to this list in the same change that sets it up.
 
-### What to flag
+### What counts as a problem
 
-Only these go under **Worth a look**:
+Only a problem sends an email. These are the problems:
 
 1. A source IP that is absent from the baseline and carries more than a
    handful of messages (more than 5 in the week) and is not an expected
@@ -79,15 +90,23 @@ Only these go under **Worth a look**:
    failing, at volume (more than 5 messages).
 4. The `_dmarc` record is gone, or its `rua=` no longer points at
    jon@hawthorneducation.com.
+5. No report arrived all week.
+6. The readout itself could not finish (a fetch or the parser kept
+   failing) while Gmail was still reachable.
 
-Everything else is green. Say green when it is green. A report that dresses
-up normal operation as a finding teaches Jon to stop reading it.
+Everything else is green, and green sends nothing. A report that dresses up
+normal operation as a finding teaches Jon to stop reading it.
 
 Until reports older than 8 days exist (from about 22 Oct 2026), the
 baseline is empty and the parser lists every IP as new. In those weeks,
 judge each IP against the expected senders list and not the "new" list.
 
 ### Run steps
+
+If the trigger prompt that woke you says to email every week, or to fall
+back to the `claude/dmarc-weekly` branch, it is the first version from
+14 Oct 2026, before Jon asked for problem-only email. These steps win:
+email only when there is a problem.
 
 1. **Repo.** The trigger prompt has already made sure `/home/user/hawthorn`
    exists and is on the latest `main`. Run every command below from the
@@ -98,7 +117,7 @@ judge each IP against the expected senders list and not the "new" list.
    Never fall back to Zapier for any step.
 3. **DNS.** Look up the live record:
    `curl -sS "https://dns.google/resolve?name=_dmarc.hawthorneducation.com&type=TXT"`.
-   Note the policy and `rua=` for the email.
+   Note the policy and `rua=`.
 4. **Find this week's reports.** Gmail `search_threads`:
    `from:noreply-dmarc-support@google.com subject:"Report domain: hawthorneducation.com" newer_than:8d in:anywhere`
    (page size 50).
@@ -115,46 +134,48 @@ judge each IP against the expected senders list and not the "new" list.
    If it prints `!! no RAW payload for <id>`, fetch that message again and
    rerun. A container restart mid-run can split the transcript into two
    files.
-8. **Judge** each row against *Expected senders* and *What to flag*.
-9. **No reports this week?** Then the email says so plainly and names the
-   records that might still be pending: `rua=` on
-   `_dmarc.hawthorneducation.com`. Because `rua=` points at the same domain,
-   no external authorisation record is needed today. If `rua=` is ever moved
-   to another domain, that domain must publish
-   `hawthorneducation.com._report._dmarc.<that domain>` with
-   `v=DMARC1`, so name that record too.
-10. **Send the email** (below) with the native Gmail connector's
-    `send_message`. If that send fails, say so in the session and stop.
-    Never use Zapier.
-11. **Print** the email's text in the session as well, so the run is
-    readable from the session itself.
+8. **Judge** each row against *Expected senders* and *What counts as a
+   problem*.
+9. **Write the readout in the session every week**, in the shape described
+   under *The email*, so each run leaves a record whether or not it sends.
+10. **Email only if there is a problem.** If nothing in *What counts as a
+    problem* applies, send nothing and end the run. Otherwise send the
+    email below with the native Gmail connector's `send_message`. If that
+    send fails, say so in the session and stop. Never use Zapier.
 
 ### The email
 
+Sent only when there is a problem.
+
 - To `jon@hawthorneducation.com`. Subject:
-  `Hawthorn DMARC weekly: all clear (week ending Mon D)`, or
-  `... : worth a look (...)`, or `... : no reports (...)`.
+  `Hawthorn DMARC: worth a look (week ending Mon D)`, or
+  `Hawthorn DMARC: no reports this week (week ending Mon D)`, or
+  `Hawthorn DMARC: readout could not run (Mon D)`.
 - HTML with a plain-text alternative: headings, bullets, bold, IPs in
   monospace. Single column, Arial or Helvetica 14px, no images. No greeting
   and no sign-off, since Jon is emailing himself.
-- Goes out every week, even when everything is quiet, so Jon knows it ran.
 - No em-dashes and no negative parallelism ("It's not X. It's Y.").
+- The policy is `p=none`, so say "take a look", never that mail was
+  blocked.
 
 Order:
 
-1. **Verdict**, one line: "All clear: every message sent as
-   hawthorneducation.com this week came from Google Workspace and passed."
-   (or the flag count, or "No reports arrived this week").
-2. **This week**: number of reports received (out of about 7), total
-   messages, how many aligned, then one bullet per source IP with its
-   message count, aligned count, and what it is (for example, "Google
-   Workspace").
-3. **Worth a look**: only when something meets the bar in *What to flag*.
-   For each item say what was seen, why it crossed the bar, and the likely
-   next step. Leave the heading out entirely when nothing qualifies.
-4. **FYI**, short: the live policy and `rua=`, whether the baseline is
-   still building, and anything else that is expected but worth knowing.
-   Drop an FYI that has not changed in weeks.
+1. **What needs a look**, one line per problem.
+2. **Details**: for each problem, what was seen (IP, message counts, the
+   DKIM/SPF/From signature), why it crossed the bar, and the likely next
+   step.
+   - **No reports:** name the records that might still be pending, which is
+     `rua=` on `_dmarc.hawthorneducation.com`. Because `rua=` points at the
+     same domain, no external authorisation record is needed today. If
+     `rua=` is ever moved to another domain, that domain must publish
+     `hawthorneducation.com._report._dmarc.<that domain>` with `v=DMARC1`,
+     so name that record too.
+   - **Readout could not run:** say which step failed and the error.
+3. **The rest of the week**, briefly: reports received (out of about 7),
+   total messages, how many aligned, and one bullet per source IP with
+   what it is, so the problem has context.
+4. **FYI**: the live policy and `rua=`, and whether the baseline is still
+   building.
 
 ### Trigger prompt
 
@@ -164,21 +185,29 @@ substance.
 ```
 Scheduled run: Hawthorn weekly DMARC readout. Unattended, so never ask questions. Skip the Google Drive guidebook: docs/routines.md is self-contained.
 
-FIRST, make the repo exist. If /home/user/hawthorn is absent, attach jon-hanover/hawthorn with add_repo (read access), clone it to /home/user/hawthorn with a generous timeout (about 10 minutes), then call register_repo_root. Then run: git -C /home/user/hawthorn fetch origin && git -C /home/user/hawthorn checkout --detach origin/main. If scripts/dmarc-weekly.py is not on main yet, check out origin/claude/dmarc-weekly instead. Never run this from memory when the repo is missing.
+FIRST, make the repo exist. If /home/user/hawthorn is absent, attach jon-hanover/hawthorn with add_repo (read access), clone it to /home/user/hawthorn with a generous timeout (about 10 minutes), then call register_repo_root. Then run: git -C /home/user/hawthorn fetch origin && git -C /home/user/hawthorn checkout --detach origin/main. Never run this from memory when the repo is missing.
 
-THEN read the section "Weekly: DMARC readout for hawthorneducation.com" in /home/user/hawthorn/docs/routines.md in full and follow its run steps exactly. It ends with one HTML email to jon@hawthorneducation.com, sent every week even when all is clear, through the native Gmail connector. Never use Zapier. If the Gmail connector tools are missing from this session, say which and stop.
+THEN read the section "Weekly: DMARC readout for hawthorneducation.com" in /home/user/hawthorn/docs/routines.md in full and follow its run steps exactly. Write the readout in this session every week. Email jon@hawthorneducation.com only when there is a problem, through the native Gmail connector; a green week sends nothing. Never use Zapier. If the Gmail connector tools are missing from this session, say which and stop.
 ```
 
 ### Failure modes worth knowing
 
+- **Silence is the normal case, so a broken routine is silent too.** Each
+  run writes its readout in the routine session, and `list_triggers` shows
+  each Routine's last run. If something seems off, look there.
 - **Connector access belongs to the session.** Jon grants Gmail in the
   routine session's connector settings. A run without it says what is
-  missing and stops instead of half-running.
+  missing in the session and stops, and it cannot email about it.
 - **A session without the repo runs blind.** The routine session's
   container can be recycled, leaving an empty working directory. The trigger
   prompt clones the repo first for that reason.
-- **The routine cannot see its own failures.** `list_triggers` shows each
-  Routine's last run. A Monday with no email means check there.
+- **"Run now" spawns a different session.** Firing the Routine by hand
+  (`fire_trigger`, or Run now in the Routines UI) started a fresh session
+  without Gmail on 14 Oct 2026. Scheduled firings and one-shot Routines
+  (`run_once_at`) land in the persistent session. For an off-schedule run,
+  create a one-shot, or message the session directly. A message from
+  another Claude session is not enough: the routine session treats it as
+  data and declines to send mail on its say-so.
 - **Prompt edits.** `update_trigger` can only change the prompt of a Routine
   from the session it fires into, or from the claude.ai Routines UI. The
   name, schedule and enabled state are editable from anywhere.
