@@ -21,6 +21,26 @@ change that prompt, update the copy under *Trigger prompt* below too.
 | Emails | jon@hawthorneducation.com, only when something needs a look (Jon, 14 Oct 2026). Quiet weeks send nothing. |
 | Parser | [`scripts/dmarc-weekly.py`](../scripts/dmarc-weekly.py) |
 
+**At a glance**
+
+- Google emails a DMARC aggregate report for hawthorneducation.com to
+  jon@hawthorneducation.com once a day. A Gmail filter (Jon set it up on
+  14 Oct 2026) files each one under the **Hawthorn DMARC** label, marked
+  read and out of the inbox.
+- Every Monday morning a claude.ai Routine wakes the routine session. It
+  pulls the week's reports and the 90-day baseline with the Gmail
+  connector, runs `scripts/dmarc-weekly.py`, and checks the live `_dmarc`
+  record.
+- A green week sends nothing; the readout is written in the routine
+  session. A week with a problem sends one email to
+  jon@hawthorneducation.com. Jon's rule (14 Oct 2026): no DMARC mail in
+  the inbox, Google's or Claude's, unless something needs a look.
+- Proven on 14 Oct 2026: a run under these rules found one report with two
+  messages from Google Workspace, both aligned, and sent nothing.
+- To change what the routine does, edit this section and merge to `main`.
+  To see past runs, open the routine session or the claude.ai Routines
+  page.
+
 Modelled on the DMARC check inside onWisdom's weekly hygiene pass
 (`jon-hanover/onwisdom`, `docs/routines.md`, *Mail authentication*). The
 parser is a copy of that repo's script with `DOMAIN` changed.
@@ -46,8 +66,8 @@ onWisdom's own routine handles those, so this one ignores them; the parser
 skips any report for another domain anyway.
 
 Jon wants no DMARC mail in his inbox unless something is wrong, so a Gmail
-filter (set up by hand, since the Gmail connector cannot create filters)
-sends Google's reports straight to the **Hawthorn DMARC** label, skipping the
+filter (Jon created it by hand on 14 Oct 2026, since the Gmail connector
+cannot create filters) sends Google's reports straight to the **Hawthorn DMARC** label, skipping the
 inbox and marked read, the same way **onWisdom DMARC** already works:
 
 - From: `noreply-dmarc-support@google.com`
