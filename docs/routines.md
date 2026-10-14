@@ -15,8 +15,8 @@ change that prompt, update the copy under *Trigger prompt* below too.
 
 | | |
 | :-- | :-- |
-| Routine | `Hawthorn weekly DMARC readout`, trigger `TRIGGER_ID` |
-| Session | `SESSION_ID` (persistent, Sonnet 5.5, Jon's choice 14 Oct 2026) |
+| Routine | `Hawthorn weekly DMARC readout`, trigger `trig_019c7zs8pxiMsypCuxkux8CZ` |
+| Session | `session_016WPbTiJGj44USsuiJEhFWV` (persistent, Sonnet 5.5, Jon's choice 14 Oct 2026) |
 | Schedule | Mondays 6:52 AM Denver (`CRON_TZ=America/Denver 52 6 * * 1`) |
 | Sends to | jon@hawthorneducation.com, every week, quiet or not |
 | Parser | [`scripts/dmarc-weekly.py`](../scripts/dmarc-weekly.py) |
