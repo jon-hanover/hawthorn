@@ -123,11 +123,6 @@ judge each IP against the expected senders list and not the "new" list.
 
 ### Run steps
 
-If the trigger prompt that woke you says to email every week, or to fall
-back to the `claude/dmarc-weekly` branch, it is the first version from
-14 Oct 2026, before Jon asked for problem-only email. These steps win:
-email only when there is a problem.
-
 1. **Repo.** The trigger prompt has already made sure `/home/user/hawthorn`
    exists and is on the latest `main`. Run every command below from the
    repo root.
