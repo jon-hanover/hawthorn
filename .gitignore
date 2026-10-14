@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# DMARC parser output (scripts/dmarc-weekly.py)
+dmarc-reports.json

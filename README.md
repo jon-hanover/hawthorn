@@ -27,3 +27,10 @@ from the Actions tab.
 2. Add the route name to the `routes` list in `scripts/spa-fallback.mjs` so a
    direct visit to that URL works on GitHub Pages.
 3. Add the URL to `public/sitemap.xml`.
+
+## Routines
+
+A weekly DMARC readout for hawthorneducation.com runs as a claude.ai Routine
+and emails jon@hawthorneducation.com every Monday. What it does, and the
+instructions it follows, live in [`docs/routines.md`](docs/routines.md). Its
+parser is `scripts/dmarc-weekly.py`.
