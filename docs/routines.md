@@ -23,10 +23,12 @@ change that prompt, update the copy under *Trigger prompt* below too.
 
 **At a glance**
 
-- Google emails a DMARC aggregate report for hawthorneducation.com to
-  jon@hawthorneducation.com once a day. A Gmail filter (Jon set it up on
-  14 Oct 2026) files each one under the **Hawthorn DMARC** label, marked
-  read and out of the inbox.
+- Receivers email DMARC aggregate reports for hawthorneducation.com to
+  jon@hawthorneducation.com: Google once a day, and others (Mimecast from
+  16 Oct 2026) whenever Jon has mailed one of their customers. A Gmail
+  filter (Jon set it up on 14 Oct 2026, widened 16 Oct 2026 to match any
+  reporter) files each one under the **Hawthorn DMARC** label, marked read
+  and out of the inbox.
 - Every Monday morning a claude.ai Routine wakes the routine session. It
   pulls the week's reports and the 90-day baseline with the Gmail
   connector, runs `scripts/dmarc-weekly.py`, and checks the live `_dmarc`
@@ -60,18 +62,29 @@ sends no mail.
 Google sends one aggregate report a day from
 `noreply-dmarc-support@google.com` to the `rua=` address, subject
 `Report domain: hawthorneducation.com Submitter: google.com Report-ID: ...`,
-with a zipped XML attachment. The first one covered 13 Oct 2026. The same
+with a zipped XML attachment. The first one covered 13 Oct 2026.
+
+Other receivers report too, on their own schedule and only for days when
+they received mail from hawthorneducation.com. The first was Mimecast on
+16 Oct 2026: sender `no-reply@us-1.mimecastreport.com`, subject
+`Report domain: hawthorneducation.com Submitter: mimecast.org Report-ID: ...`,
+gzipped XML attachment named `mimecast.org!hawthorneducation.com!<begin>!<end>.gz`.
+Microsoft, Yahoo and others may follow. They all use the same subject
+format, so the routine matches on subject alone, and the parser reads zip
+and gz alike. Their counts cover only mail Jon sent to that receiver's
+customers, so they are small and irregular. The same
 inbox also receives onWisdom's reports (`Report domain: onwisdom.org`).
 onWisdom's own routine handles those, so this one ignores them; the parser
 skips any report for another domain anyway.
 
 Jon wants no DMARC mail in his inbox unless something is wrong, so a Gmail
 filter (Jon created it by hand on 14 Oct 2026, since the Gmail connector
-cannot create filters) sends Google's reports straight to the **Hawthorn DMARC** label, skipping the
-inbox and marked read, the same way **onWisdom DMARC** already works:
+cannot create filters) sends every reporter's reports straight to the
+**Hawthorn DMARC** label, skipping the inbox and marked read, the same way
+**onWisdom DMARC** already works. On 16 Oct 2026 Jon dropped the From
+criterion so Mimecast's and later reporters' mail is caught too:
 
-- From: `noreply-dmarc-support@google.com`
-- Subject: `Report domain: hawthorneducation.com`
+- Subject: `Report domain: hawthorneducation.com` (no From criterion)
 - Actions: Skip the Inbox, Mark as read, Apply the label "Hawthorn DMARC"
 
 The routine searches `in:anywhere`, so it still finds archived reports.
@@ -134,8 +147,11 @@ judge each IP against the expected senders list and not the "new" list.
    `curl -sS "https://dns.google/resolve?name=_dmarc.hawthorneducation.com&type=TXT"`.
    Note the policy and `rua=`.
 4. **Find this week's reports.** Gmail `search_threads`:
-   `from:noreply-dmarc-support@google.com subject:"Report domain: hawthorneducation.com" newer_than:8d in:anywhere`
-   (page size 50).
+   `subject:"Report domain: hawthorneducation.com" newer_than:8d in:anywhere`
+   (page size 50). No `from:` term, so every reporter is included (Google,
+   Mimecast, and any others). If a hit has no zip or gz attachment, or its
+   sender is not a recognisable reporting service, leave it out of the
+   parse and mention it in the readout.
 5. **Find the baseline.** Same search with `older_than:8d newer_than:90d`
    in place of `newer_than:8d`. Page through all results.
 6. **Fetch.** `get_message` with `messageFormat: RAW` for every message id
@@ -186,7 +202,8 @@ Order:
      `hawthorneducation.com._report._dmarc.<that domain>` with `v=DMARC1`,
      so name that record too.
    - **Readout could not run:** say which step failed and the error.
-3. **The rest of the week**, briefly: reports received (out of about 7),
+3. **The rest of the week**, briefly: reports received by reporter
+   (Google sends about 7; others vary),
    total messages, how many aligned, and one bullet per source IP with
    what it is, so the problem has context.
 4. **FYI**: the live policy and `rua=`, and whether the baseline is still

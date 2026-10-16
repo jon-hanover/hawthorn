@@ -3,7 +3,8 @@
 
 Copied from jon-hanover/onwisdom scripts/dmarc-weekly.py (14 Oct 2026) with
 DOMAIN changed. docs/routines.md is the home for what the routine does with
-the result. This file only turns Google's aggregate-report emails into the
+the result. This file only turns receivers' aggregate-report emails (Google,
+Mimecast and others) into the
 week-versus-baseline table the routine reads.
 
 Input is the RAW form of each report email as the Gmail connector returns it
