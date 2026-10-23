@@ -18,13 +18,13 @@ change that prompt, update the copy under *Trigger prompt* below too.
 | Routine | `Hawthorn weekly DMARC readout`, trigger `trig_019c7zs8pxiMsypCuxkux8CZ` |
 | Session | `session_016WPbTiJGj44USsuiJEhFWV` (persistent, Sonnet 5.5, Jon's choice 14 Oct 2026) |
 | Schedule | Mondays 6:52 AM Denver (`CRON_TZ=America/Denver 52 6 * * 1`) |
-| Emails | jon@hawthorneducation.com, only when something needs a look (Jon, 14 Oct 2026). Quiet weeks send nothing. |
+| Emails | Jon's Hawthorn address (named in the stored trigger prompt), only when something needs a look (Jon, 14 Oct 2026). Quiet weeks send nothing. |
 | Parser | [`scripts/dmarc-weekly.py`](../scripts/dmarc-weekly.py) |
 
 **At a glance**
 
 - Receivers email DMARC aggregate reports for hawthorneducation.com to
-  jon@hawthorneducation.com: Google once a day, and others (Mimecast from
+  Jon's Hawthorn inbox: Google once a day, and others (Mimecast from
   16 Oct 2026) whenever Jon has mailed one of their customers. A Gmail
   filter (Jon set it up on 14 Oct 2026, widened 16 Oct 2026 to match any
   reporter) files each one under the **Hawthorn DMARC** label, marked read
@@ -35,7 +35,7 @@ change that prompt, update the copy under *Trigger prompt* below too.
   record.
 - A green week sends nothing; the readout is written in the routine
   session. A week with a problem sends one email to
-  jon@hawthorneducation.com. Jon's rule (14 Oct 2026): no DMARC mail in
+  Jon's Hawthorn inbox. Jon's rule (14 Oct 2026): no DMARC mail in
   the inbox, Google's or Claude's, unless something needs a look.
 - Proven on 14 Oct 2026: a run under these rules found one report with two
   messages from Google Workspace, both aligned, and sent nothing.
@@ -52,7 +52,7 @@ parser is a copy of that repo's script with `DOMAIN` changed.
 The live record (checked 14 Oct 2026, the day after it was published):
 
 ```
-_dmarc.hawthorneducation.com  TXT  "v=DMARC1; p=none; rua=mailto:jon@hawthorneducation.com; fo=1"
+_dmarc.hawthorneducation.com  TXT  "v=DMARC1; p=none; rua=mailto:<Jon's Hawthorn address>; fo=1"
 ```
 
 SPF is `v=spf1 include:_spf.google.com ~all`, DKIM is published at
@@ -122,7 +122,7 @@ Only a problem sends an email. These are the problems:
 3. Any record whose From is hawthorneducation.com with both DKIM and SPF
    failing, at volume (more than 5 messages).
 4. The `_dmarc` record is gone, or its `rua=` no longer points at
-   jon@hawthorneducation.com.
+   Jon's Hawthorn address (the one the trigger prompt emails).
 5. No report arrived all week.
 6. The readout itself could not finish (a fetch or the parser kept
    failing) while Gmail was still reachable.
@@ -178,7 +178,7 @@ judge each IP against the expected senders list and not the "new" list.
 
 Sent only when there is a problem.
 
-- To `jon@hawthorneducation.com`. Subject:
+- To Jon's Hawthorn address, the one named in the trigger prompt. Subject:
   `Hawthorn DMARC: worth a look (week ending Mon D)`, or
   `Hawthorn DMARC: no reports this week (week ending Mon D)`, or
   `Hawthorn DMARC: readout could not run (Mon D)`.
@@ -212,14 +212,16 @@ Order:
 ### Trigger prompt
 
 The Routine sends this every Monday. Keep it short; the steps above are the
-substance.
+substance. The stored prompt names Jon's Hawthorn address where this copy
+shows `<Jon's Hawthorn address>`, so the address stays out of this public
+repo.
 
 ```
 Scheduled run: Hawthorn weekly DMARC readout. Unattended, so never ask questions. Skip the Google Drive guidebook: docs/routines.md is self-contained.
 
 FIRST, make the repo exist. If /home/user/hawthorn is absent, attach jon-hanover/hawthorn with add_repo (read access), clone it to /home/user/hawthorn with a generous timeout (about 10 minutes), then call register_repo_root. Then run: git -C /home/user/hawthorn fetch origin && git -C /home/user/hawthorn checkout --detach origin/main. Never run this from memory when the repo is missing.
 
-THEN read the section "Weekly: DMARC readout for hawthorneducation.com" in /home/user/hawthorn/docs/routines.md in full and follow its run steps exactly. Write the readout in this session every week. Email jon@hawthorneducation.com only when there is a problem, through the native Gmail connector; a green week sends nothing. Never use Zapier. If the Gmail connector tools are missing from this session, say which and stop.
+THEN read the section "Weekly: DMARC readout for hawthorneducation.com" in /home/user/hawthorn/docs/routines.md in full and follow its run steps exactly. Write the readout in this session every week. Email <Jon's Hawthorn address> only when there is a problem, through the native Gmail connector; a green week sends nothing. Never use Zapier. If the Gmail connector tools are missing from this session, say which and stop.
 ```
 
 ### Failure modes worth knowing

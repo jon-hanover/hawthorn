@@ -21,6 +21,11 @@ export const Header = () => {
         }) => `${linkBase} ${isActive ? "bg-muted text-foreground" : "text-muted-foreground"}`}>
             About
           </NavLink>
+          <NavLink to="/contact" className={({
+          isActive
+        }) => `${linkBase} ${isActive ? "bg-muted text-foreground" : "text-muted-foreground"}`}>
+            Contact
+          </NavLink>
           
         </div>
       </nav>

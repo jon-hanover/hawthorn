@@ -1,0 +1,8 @@
+name = "hawthorn-contact"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Secrets, set once and never committed:
+#   npx wrangler secret put TURNSTILE_SECRET
+#   npx wrangler secret put AIRTABLE_WEBHOOK_URL

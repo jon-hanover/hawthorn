@@ -2,7 +2,7 @@
 // Copy the built index.html to each client-side route, plus 404.html for unknown paths.
 import { copyFileSync, mkdirSync } from "node:fs";
 
-const routes = ["about"];
+const routes = ["about", "contact"];
 
 for (const route of routes) {
   mkdirSync(`dist/${route}`, { recursive: true });

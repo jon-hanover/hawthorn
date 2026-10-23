@@ -36,14 +36,7 @@ const Index = () => {
           </p>
           <div className="mt-8 flex items-center justify-center gap-3">
             <Button asChild>
-              <a
-                href="https://www.linkedin.com/in/jhanover/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Connect on LinkedIn"
-              >
-                Get in touch
-              </a>
+              <Link to="/contact">Get in touch</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/about" aria-label="Learn more about Hawthorn">
