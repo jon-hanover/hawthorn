@@ -11,7 +11,7 @@ const CONTACT_ENDPOINT = "https://hawthorn-contact.jon-799.workers.dev";
 // Turnstile site keys are public. In local dev, use Cloudflare's always-pass test key.
 const TURNSTILE_SITE_KEY = import.meta.env.DEV
   ? "1x00000000000000000000AA"
-  : "TURNSTILE_SITE_KEY_PENDING";
+  : "0x4AAAAAAFisbMxghzDKhUkc";
 const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 type TurnstileApi = {
